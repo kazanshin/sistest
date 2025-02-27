@@ -1,4 +1,4 @@
-// Create needed Lucide icons components
+// Create needed Lucide icons componentss
 const {
   BarChart, 
   Search, 
