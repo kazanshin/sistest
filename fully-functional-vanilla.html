@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twin.kle Student Management System</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- SheetJS for Excel handling -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* Additional custom styles */
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .hover-shadow:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .whitespace-pre-wrap {
+      white-space: pre-wrap;
+    }
+    .transition-all {
+      transition: all 0.3s ease;
+    }
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Custom scrollbar for better UX */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="flex flex-col h-screen bg-gray-50">
+      <header class="p-4 flex items-center justify-between bg-white border-b shadow-sm">
+        <div class="flex items-center">
+          <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+            <span class="text-gray-600 font-bold text-lg">t.</span>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+            Student Management System
+          </h1>
+        </div>
+        <div class="text-xl font-semibold">
+          <span class="text-gray-600">twin</span>
+          <span class="text-gray-700">.kle</span>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-hidden flex">
+        <!-- Left Sidebar -->
+        <aside id="sidebar" class="w-64 bg-gray-100 border-r p-4 overflow-y-auto custom-scrollbar">
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2 flex items-center">
+              <span class="mr-2">📝</span>
+              Data Management
+            </h2>
+            <div class="mt-2 space-y-2">
+              <input
+                type="file"
+                id="excel-upload"
+                accept=".xlsx,.xls"
+                class="hidden"
+              />
+              <label 
+                for="excel-upload"
+                class="text-white px-3 py-2 rounded cursor-pointer inline-block bg-gray-600 hover:bg-gray-700 w-full text-center text-sm"
+              >
+                <span class="mr-1">⬆️</span>
+                Import Excel File
+              </label>
+              
+              <div class="flex space-x-2">
+                <button
+                  id="export-data-btn"
+                  class="text-xs px-3 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white flex-1 text-center"
+                >
+                  Export Data
+                </button>
+                
+                <input
+                  type="file"
+                  id="json-upload"
+                  accept=".json"
+                  class="hidden"
+                />
+                <label 
+                  for="json-upload"
+                  class="text-xs px-3 py-2 rounded bg-green-500 hover:bg-green-600 text-white flex-1 text-center cursor-pointer"
+                >
+                  Import Data
+                </label>
+              </div>
+              
+              <div id="data-status" class="hidden text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full w-full text-center">
+                Data Loaded Successfully
+              </div>
+              
+              <div id="error-message" class="hidden text-red-600 text-xs mt-1">
+                Note: Error message will appear here
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2 flex items-center">
+              <span class="mr-2">📋</span>
+              Navigation
+            </h2>
+            <ul class="space-y-1">
+              <li>
+                <button 
+                  id="nav-dashboard"
+                  class="w-full text-left px-3 py-2 rounded bg-gray-200 text-gray-800"
+                >
+                  Dashboard
+                </button>
+              </li>
+              <li>
+                <button 
+                  id="nav-classes"
+                  class="w-full text-left px-3 py-2 rounded hover:bg-gray-100"
+                >
+                  Class List
+                </button>
+              </li>
+              <li>
+                <button 
+                  id="nav-students"
+                  class="w-full text-left px-3 py-2 rounded hover:bg-gray-100"
+                >
+                  Student List
+                </button>
+              </li>
+            </ul>
+          </div>
+          
+          <div id="search-section" class="mb-6 hidden">
+            <h2 class="text-lg font-semibold mb-2 flex items-center">
+              <span class="mr-2">🔍</span>
+              Student Search
+            </h2>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search students..."
+              class="w-full px-3 py-2 border rounded mb-2"
+            />
+            <select
+              id="class-filter"
+              class="w-full px-3 py-2 border rounded"
+            >
+              <option value="all">All Classes</option>
+              <!-- Classes will be added here dynamically -->
+            </select>
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div id="main-content" class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+          <!-- Content will be loaded here dynamically -->
+          <div class="flex flex-col items-center justify-center h-full">
+            <div class="text-center max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+              <h2 class="text-xl font-semibold mb-4">Welcome to Twin.kle Student Management</h2>
+              <p class="text-gray-600 mb-6">
+                To get started, please import an Excel file with your student data or load the sample data.
+              </p>
+              <div class="flex flex-col items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 mb-6">
+                <span class="text-4xl mb-4">📝</span>
+                <input
+                  type="file"
+                  id="excel-upload-main"
+                  accept=".xlsx,.xls"
+                  class="hidden"
+                />
+                <label 
+                  for="excel-upload-main"
+                  class="hover:bg-gray-700 bg-gray-600 text-white px-4 py-2 rounded cursor-pointer inline-block mb-4"
+                >
+                  <span class="mr-2">⬆️</span>
+                  Choose Excel File
+                </label>
+              </div>
+              <button id="load-sample-data" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Load Sample Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="border-t p-4 text-center text-gray-700 text-sm flex items-center justify-center bg-gray-100">
+        <div class="text-lg font-semibold">
+          <span class="text-gray-600">twin</span>
+          <span class="text-gray-700">.kle</span>
+        </div>
+        <span class="mx-2">•</span>
+        <span>Student Management System • <span id="current-year">2025</span></span>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // Application state
+    const state = {
+      database: {
+        classes: {},
+        students: {},
+        comments: {
+          classes: {},
+          students: {}
+        }
+      },
+      ui: {
+        activeTab: 'dashboard',
+        selectedClass: null,
+        selectedStudent: null,
+        searchTerm: '',
+        classFilter: 'all',
+        gradesList: [],
+        expandedGrades: {},
+        classesByGrade: {},
+        studentsByGrade: {},
+        filteredStudents: []
+      },
+      stats: {
+        totalStudents: 0,
+        totalClasses: 0,
+        studentsPerGrade: {}
+      }
+    };
+    
+    // Level definitions
+    const levelMapping = {
+      'R': 'Rocket',
+      'T': 'Top',
+      'H': 'High',
+      'A': 'Ace',
+      'E': 'Elite'
+    };
+    
+    // DOM Elements
+    const elements = {
+      mainContent: document.getElementById('main-content'),
+      searchSection: document.getElementById('search-section'),
+      searchInput: document.getElementById('search-input'),
+      classFilter: document.getElementById('class-filter'),
+      dataStatus: document.getElementById('data-status'),
+      errorMessage: document.getElementById('error-message'),
+      navDashboard: document.getElementById('nav-dashboard'),
+      navClasses: document.getElementById('nav-classes'),
+      navStudents: document.getElementById('nav-students'),
+      loadSampleData: document.getElementById('load-sample-data'),
+      excelUpload: document.getElementById('excel-upload'),
+      excelUploadMain: document.getElementById('excel-upload-main'),
+      jsonUpload: document.getElementById('json-upload'),
+      exportDataBtn: document.getElementById('export-data-btn'),
+      currentYear: document.getElementById('current-year')
+    };
+    
+    // Set current year
+    elements.currentYear.textContent = new Date().getFullYear().toString();
+    
+    // Initialize navigation
+    function initNavigation() {
+      elements.navDashboard.addEventListener('click', () => navigateTo('dashboard'));
+      elements.navClasses.addEventListener('click', () => navigateTo('classes'));
+      elements.navStudents.addEventListener('click', () => navigateTo('students'));
+      
+      elements.loadSampleData.addEventListener('click', loadSampleData);
+      elements.excelUpload.addEventListener('change', handleFileUpload);
+      elements.excelUploadMain.addEventListener('change', handleFileUpload);
+      elements.jsonUpload.addEventListener('change', importData);
+      elements.exportDataBtn.addEventListener('click', exportData);
+      
+      elements.searchInput.addEventListener('input', event => {
+        state.ui.searchTerm = event.target.value;
+        filterStudents();
+        renderStudentList();
+      });
+      
+      elements.classFilter.addEventListener('change', event => {
+        state.ui.classFilter = event.target.value;
+        filterStudents();
+        renderStudentList();
+      });
+    }
+    
+    // Navigation handler
+    function navigateTo(tab) {
+      state.ui.activeTab = tab;
+      state.ui.selectedClass = null;
+      state.ui.selectedStudent = null;
+      
+      // Update active nav button
+      elements.navDashboard.classList.remove('bg-gray-200', 'text-gray-800');
+      elements.navClasses.classList.remove('bg-gray-200', 'text-gray-800');
+      elements.navStudents.classList.remove('bg-gray-200', 'text-gray-800');
+      
+      // Hide/show search section
+      if (tab === 'students') {
+        elements.searchSection.classList.remove('hidden');
+      } else {
+        elements.searchSection.classList.add('hidden');
+      }
+      
+      // Set active button
+      if (tab === 'dashboard') {
+        elements.navDashboard.classList.add('bg-gray-200', 'text-gray-800');
+      } else if (tab === 'classes' || tab === 'class-details') {
+        elements.navClasses.classList.add('bg-gray-200', 'text-gray-800');
+      } else if (tab === 'students' || tab === 'student-details') {
+        elements.navStudents.classList.add('bg-gray-200', 'text-gray-800');
+      }
+      
+      // Render content
+      renderContent();
+    }
+    
+    // Main render function
+    function renderContent() {
+      let content = '';
+      
+      if (Object.keys(state.database.classes).length === 0) {
+        // Show welcome screen if no data loaded
+        content = `
+          <div class="flex flex-col items-center justify-center h-full">
+            <div class="text-center max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+              <h2 class="text-xl font-semibold mb-4">Welcome to Twin.kle Student Management</h2>
+              <p class="text-gray-600 mb-6">
+                To get started, please import an Excel file with your student data or load the sample data.
+              </p>
+              <div class="flex flex-col items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 mb-6">
+                <span class="text-4xl mb-4">📝</span>
+                <input
+                  type="file"
+                  id="excel-upload-main"
+                  accept=".xlsx,.xls"
+                  class="hidden"
+                />
+                <label 
+                  for="excel-upload-main"
+                  class="hover:bg-gray-700 bg-gray-600 text-white px-4 py-2 rounded cursor-pointer inline-block mb-4"
+                >
+                  <span class="mr-2">⬆️</span>
+                  Choose Excel File
+                </label>
+              </div>
+              <button id="load-sample-data-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Load Sample Data
+              </button>
+            </div>
+          </div>
+        `;
+        
+        elements.mainContent.innerHTML = content;
+        document.getElementById('load-sample-data-btn').addEventListener('click', loadSampleData);
+        document.getElementById('excel-upload-main').addEventListener('change', handleFileUpload);
+        return;
+      }
+      
+      // Render based on active tab
+      if (state.ui.activeTab === 'dashboard') {
+        content = renderDashboard();
+      } else if (state.ui.activeTab === 'classes') {
+        content = renderClassList();
+      } else if (state.ui.activeTab === 'class-details') {
+        content = renderClassDetails();
+      } else if (state.ui.activeTab === 'students') {
+        content = renderStudentList();
+      } else if (state.ui.activeTab === 'student-details') {
+        content = renderStudentDetails();
+      }
+      
+      elements.mainContent.innerHTML = content;
+      addEventListeners();
+    }
+    
+    // Add event listeners to dynamically created elements
+    function addEventListeners() {
+      // Add class selection handlers
+      document.querySelectorAll('.class-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const classId = card.getAttribute('data-id');
+          selectClass(classId);
+        });
+      });
+      
+      // Add student selection handlers
+      document.querySelectorAll('.student-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const studentId = row.getAttribute('data-id');
+          selectStudent(studentId);
+        });
+      });
+      
+      // Add grade toggle handlers
+      document.querySelectorAll('.grade-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const grade = header.getAttribute('data-grade');
+          toggleGradeExpansion(grade);
+        });
+      });
+      
+      // Add save comment buttons
+      const saveClassCommentBtn = document.getElementById('save-class-comment');
+      if (saveClassCommentBtn) {
+        saveClassCommentBtn.addEventListener('click', () => {
+          const commentText = document.getElementById('class-comment-text').value;
+          saveComment('class', state.ui.selectedClass, commentText);
+        });
+      }
+      
+      const saveStudentCommentBtn = document.getElementById('save-student-comment');
+      if (saveStudentCommentBtn) {
+        saveStudentCommentBtn.addEventListener('click', () => {
+          const commentText = document.getElementById('student-comment-text').value;
+          saveComment('student', state.ui.selectedStudent, commentText);
+        });
+      }
+      
+      // Add back buttons
+      const backToClassesBtn = document.getElementById('back-to-classes-btn');
+      if (backToClassesBtn) {
+        backToClassesBtn.addEventListener('click', () => navigateTo('classes'));
+      }
+      
+      const backToStudentsBtn = document.getElementById('back-to-students-btn');
+      if (backToStudentsBtn) {
+        backToStudentsBtn.addEventListener('click', () => navigateTo('students'));
+      }
+    }
+    
+    // Render dashboard
+    function renderDashboard() {
+      return `
+        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4 bg-gray-100">
+              <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                <span class="mr-2">👤</span>
+                Total Students
+              </h3>
+            </div>
+            <div class="px-4 pb-4 pt-6">
+              <p class="text-3xl font-bold">${state.stats.totalStudents}</p>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4 bg-gray-100">
+              <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                <span class="mr-2">👥</span>
+                Total Classes
+              </h3>
+            </div>
+            <div class="px-4 pb-4 pt-6">
+              <p class="text-3xl font-bold">${state.stats.totalClasses}</p>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4 bg-gray-100">
+              <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                <span class="mr-2">📊</span>
+                Grade with Most Students
+              </h3>
+            </div>
+            <div class="px-4 pb-4 pt-6">
+              <p class="text-3xl font-bold">
+                ${getMostPopulatedGrade()}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold">Students by Grade Level</h3>
+            <p class="text-sm text-gray-500">Distribution of students across different grade levels</p>
+          </div>
+          <div class="px-4 pb-4">
+            <div class="space-y-4">
+              ${renderGradeDistribution()}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Get most populated grade for dashboard
+    function getMostPopulatedGrade() {
+      if (Object.entries(state.stats.studentsPerGrade).length === 0) {
+        return '-';
+      }
+      
+      const topGrade = Object.entries(state.stats.studentsPerGrade)
+        .reduce((max, [grade, count]) => 
+          count > (max[1] || 0) ? [grade, count] : max, 
+          ['-', 0]
+        )[0];
+      
+      return topGrade === 'K' ? 'Kindergarten' : `Grade ${topGrade}`;
+    }
+    
+    // Render grade distribution for dashboard
+    function renderGradeDistribution() {
+      if (Object.entries(state.stats.studentsPerGrade).length === 0) {
+        return '<p class="text-gray-500 text-center py-4">No student data available</p>';
+      }
+      
+      return Object.entries(state.stats.studentsPerGrade)
+        .map(([grade, count]) => {
+          const percentage = (count / state.stats.totalStudents * 100).toFixed(0);
+          const gradeName = grade === 'K' ? 'Kindergarten' : `Grade ${grade}`;
+          
+          return `
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">${gradeName}</span>
+                <span class="text-sm font-medium">${count} students</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="h-2.5 rounded-full bg-gray-500" style="width: ${percentage}%"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+    
+    // Render class list
+    function renderClassList() {
+      let content = `
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold">Class List</h1>
+          <div class="text-sm text-gray-500">
+            ${state.stats.totalClasses} classes in ${state.ui.gradesList.length} grades
+          </div>
+        </div>
+      `;
+      
+      // Render classes by grade
+      state.ui.gradesList.forEach(grade => {
+        const isExpanded = state.ui.expandedGrades[grade] || false;
+        const gradeClasses = state.ui.classesByGrade[grade]?.classes || [];
+        const gradeTitle = grade === 'K' ? 'Kindergarten' : 
+                          grade === 'Unassigned' ? 'Unassigned Classes' : 
+                          `Grade ${grade}`;
+        
+        content += `
+          <div class="mb-4">
+            <div 
+              class="grade-header flex items-center justify-between p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+              data-grade="${grade}"
+            >
+              <div class="flex items-center">
+                <span class="mr-2">🎓</span>
+                <h3 class="font-semibold">${gradeTitle}</h3>
+                <span class="ml-2 text-sm text-gray-500">(${gradeClasses.length})</span>
+              </div>
+              <span>${isExpanded ? '▲' : '▼'}</span>
+            </div>
+            
+            ${isExpanded ? `
+              <div class="mt-2 pl-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                  ${gradeClasses.map(classInfo => `
+                    <div 
+                      class="class-card bg-white rounded-lg shadow overflow-hidden cursor-pointer hover-shadow transition-all"
+                      data-id="${classInfo.id}"
+                    >
+                      <div class="p-4 pb-2">
+                        <h3 class="font-semibold">${classInfo.name}</h3>
+                        <p class="text-sm text-gray-500">
+                          ${classInfo.fullLevelName ? classInfo.fullLevelName : (classInfo.level ? `Level: ${classInfo.level}` : '')}
+                          ${classInfo.teachers ? ` • Teacher: ${classInfo.teachers}` : ''}
+                        </p>
+                      </div>
+                      <div class="px-4 pb-2">
+                        <p class="text-sm">
+                          ${classInfo.students ? `${classInfo.students.length} students` : 'No students'}
+                        </p>
+                      </div>
+                      <div class="px-4 py-3 bg-gray-50 border-t text-xs text-gray-500 pt-0">
+                        ${state.database.comments.classes[classInfo.id] ? 
+                          `<div class="flex items-center">
+                            <span class="mr-1">⚠️</span>
+                            Has comments
+                          </div>` : 
+                          'No comments'
+                        }
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      return content;
+    }
+    
+    // Render class details
+    function renderClassDetails() {
+      if (!state.ui.selectedClass || !state.database.classes[state.ui.selectedClass]) {
+        return '<p>Class not found</p>';
+      }
+      
+      const classInfo = state.database.classes[state.ui.selectedClass];
+      const classComment = state.database.comments.classes[state.ui.selectedClass] || '';
+      
+      let content = `
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold">${classInfo.name}</h1>
+          <button
+            id="back-to-classes-btn"
+            class="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Back to Class List
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4">
+              <h3 class="text-lg font-semibold">Class Information</h3>
+            </div>
+            <div class="px-4 pb-4">
+              <dl class="space-y-2">
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Level:</dt>
+                  <dd>
+                    ${classInfo.fullLevelName || classInfo.level || 'Not specified'}
+                  </dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Teachers:</dt>
+                  <dd>
+                    ${classInfo.teachers || classInfo.teacher || 'Not specified'}
+                  </dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Schedule:</dt>
+                  <dd>
+                    ${typeof classInfo.schedule === 'string' ? classInfo.schedule : 'Not specified'}
+                  </dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Start Date:</dt>
+                  <dd>
+                    ${typeof classInfo.additionalInfo === 'string' ? classInfo.additionalInfo : 'Not specified'}
+                  </dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Students:</dt>
+                  <dd>${classInfo.students?.length || 0}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4">
+              <h3 class="text-lg font-semibold">Class Comments</h3>
+            </div>
+            <div class="px-4 pb-4">
+              <textarea
+                id="class-comment-text"
+                placeholder="Add comments about this class..."
+                class="w-full px-3 py-2 border rounded h-32 resize-none mb-4"
+              ></textarea>
+              
+              ${classComment ? `
+                <div class="mt-4">
+                  <h4 class="font-medium text-gray-700 mb-2">Saved Comments:</h4>
+                  <div class="bg-gray-50 p-3 rounded border">
+                    <p class="whitespace-pre-wrap">${classComment}</p>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t">
+              <button
+                id="save-class-comment"
+                class="flex items-center hover:bg-gray-700 bg-gray-600 text-white px-3 py-2 rounded"
+              >
+                <span class="mr-2">💾</span>
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold">Students in this Class</h3>
+          </div>
+          <div class="px-4 pb-4">
+            ${renderClassStudentTable()}
+          </div>
+        </div>
+      `;
+      
+      return content;
+    }
+    
+    // Render student table in class details
+    function renderClassStudentTable() {
+      const classInfo = state.database.classes[state.ui.selectedClass];
+      if (!classInfo.students || classInfo.students.length === 0) {
+        return `<div class="text-center py-8">
+          <p class="text-gray-500">No students in this class.</p>
+        </div>`;
+      }
+      
+      return `
+        <div class="bg-white rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  English Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Korean Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Notes
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comments
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              ${classInfo.students.map(studentId => {
+                const student = state.database.students[studentId];
+                if (!student) return '';
+                
+                return `
+                  <tr 
+                    class="student-row hover:bg-gray-50 cursor-pointer"
+                    data-id="${studentId}"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      ${student.englishName}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      ${student.koreanName}
+                    </td>
+                    <td class="px-6 py-4">
+                      ${student.notes || '<span class="text-gray-400">None</span>'}
+                    </td>
+                    <td class="px-6 py-4">
+                      ${state.database.comments.students[studentId] ? 
+                        '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Has comments</span>' : 
+                        '<span class="text-gray-400">None</span>'
+                      }
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    // Render student list
+    function renderStudentList() {
+      let content = `
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold">Student List</h1>
+          <div class="text-sm text-gray-500">
+            ${state.ui.filteredStudents.length} students found
+          </div>
+        </div>
+      `;
+      
+      // Check if we're in search/filter mode
+      if (state.ui.searchTerm || state.ui.classFilter !== 'all') {
+        content += renderStudentSearchResults();
+      } else {
+        content += renderStudentsByGrade();
+      }
+      
+      return content;
+    }
+    
+    // Render student search results
+    function renderStudentSearchResults() {
+      if (state.ui.filteredStudents.length === 0) {
+        return `
+          <div class="bg-white shadow rounded-lg p-6 text-center">
+            <p class="text-gray-500">No students found matching your search criteria.</p>
+          </div>
+        `;
+      }
+      
+      return `
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  English Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Korean Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Classes
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Notes
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comments
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              ${state.ui.filteredStudents.map(student => `
+                <tr 
+                  class="student-row hover:bg-gray-50 cursor-pointer"
+                  data-id="${student.id}"
+                >
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    ${student.englishName}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    ${student.koreanName}
+                  </td>
+                  <td class="px-6 py-4">
+                    ${student.classes && student.classes.length > 0 ? 
+                      `<div class="flex flex-wrap gap-1">
+                        ${student.classes.map(classId => {
+                          const classInfo = state.database.classes[classId];
+                          return classInfo ? 
+                            `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white bg-gray-600">
+                              ${classInfo.name}
+                            </span>` : '';
+                        }).join('')}
+                      </div>` : 
+                      '<span class="text-gray-400">None</span>'
+                    }
+                  </td>
+                  <td class="px-6 py-4">
+                    ${student.notes || '<span class="text-gray-400">None</span>'}
+                  </td>
+                  <td class="px-6 py-4">
+                    ${state.database.comments.students[student.id] ? 
+                      '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Has comments</span>' : 
+                      '<span class="text-gray-400">None</span>'
+                    }
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    // Render students organized by grade
+    function renderStudentsByGrade() {
+      let content = '';
+      
+      state.ui.gradesList.forEach(grade => {
+        const isExpanded = state.ui.expandedGrades[grade] || false;
+        const gradeStudents = state.ui.studentsByGrade[grade]?.students || [];
+        const gradeTitle = grade === 'K' ? 'Kindergarten' : 
+                          grade === 'Unassigned' ? 'Unassigned Students' : 
+                          `Grade ${grade}`;
+        
+        content += `
+          <div class="mb-4">
+            <div 
+              class="grade-header flex items-center justify-between p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+              data-grade="${grade}"
+            >
+              <div class="flex items-center">
+                <span class="mr-2">👤</span>
+                <h3 class="font-semibold">${gradeTitle}</h3>
+                <span class="ml-2 text-sm text-gray-500">(${gradeStudents.length})</span>
+              </div>
+              <span>${isExpanded ? '▲' : '▼'}</span>
+            </div>
+            
+            ${isExpanded ? `
+              <div class="mt-2 pl-2">
+                <div class="bg-white shadow rounded-lg overflow-hidden mt-4">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          English Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Korean Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Classes
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Notes
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Comments
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      ${gradeStudents.map(student => `
+                        <tr 
+                          class="student-row hover:bg-gray-50 cursor-pointer"
+                          data-id="${student.id}"
+                        >
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            ${student.englishName}
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            ${student.koreanName}
+                          </td>
+                          <td class="px-6 py-4">
+                            ${student.classes && student.classes.length > 0 ? 
+                              `<div class="flex flex-wrap gap-1">
+                                ${student.classes.map(classId => {
+                                  const classInfo = state.database.classes[classId];
+                                  return classInfo ? 
+                                    `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white bg-gray-600">
+                                      ${classInfo.name}
+                                    </span>` : '';
+                                }).join('')}
+                              </div>` : 
+                              '<span class="text-gray-400">None</span>'
+                            }
+                          </td>
+                          <td class="px-6 py-4">
+                            ${student.notes || '<span class="text-gray-400">None</span>'}
+                          </td>
+                          <td class="px-6 py-4">
+                            ${state.database.comments.students[student.id] ? 
+                              '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Has comments</span>' : 
+                              '<span class="text-gray-400">None</span>'
+                            }
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      return content;
+    }
+    
+    // Render student details
+    function renderStudentDetails() {
+      if (!state.ui.selectedStudent || !state.database.students[state.ui.selectedStudent]) {
+        return '<p>Student not found</p>';
+      }
+      
+      const student = state.database.students[state.ui.selectedStudent];
+      const studentComment = state.database.comments.students[state.ui.selectedStudent] || '';
+      
+      let content = `
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold">
+            ${student.englishName} (${student.koreanName})
+          </h1>
+          <button
+            id="back-to-students-btn"
+            class="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Back to Student List
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4">
+              <h3 class="text-lg font-semibold">Student Information</h3>
+            </div>
+            <div class="px-4 pb-4">
+              <dl class="space-y-2">
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">English Name:</dt>
+                  <dd>${student.englishName}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Korean Name:</dt>
+                  <dd>${student.koreanName}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Grade:</dt>
+                  <dd>
+                    ${student.grade === 'K' ? 'Kindergarten' : 
+                      student.grade ? `Grade ${student.grade}` : 
+                      'Not assigned'}
+                  </dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Consent:</dt>
+                  <dd>${student.consent || 'None'}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Hold Status:</dt>
+                  <dd>${student.hold || 'None'}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Contact:</dt>
+                  <dd>${student.phoneNumber || 'None'}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Email:</dt>
+                  <dd>${student.email || 'None'}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Start Date:</dt>
+                  <dd>${typeof student.startDate === 'string' ? student.startDate : 'None'}</dd>
+                </div>
+                <div class="flex">
+                  <dt class="w-1/3 font-medium">Notes:</dt>
+                  <dd>${student.notes || 'None'}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4">
+              <h3 class="text-lg font-semibold">Student Comments</h3>
+            </div>
+            <div class="px-4 pb-4">
+              <textarea
+                id="student-comment-text"
+                placeholder="Add comments about this student..."
+                class="w-full px-3 py-2 border rounded h-32 resize-none mb-4"
+              ></textarea>
+              
+              ${studentComment ? `
+                <div class="mt-4">
+                  <h4 class="font-medium text-gray-700 mb-2">Saved Comments:</h4>
+                  <div class="bg-gray-50 p-3 rounded border">
+                    <p class="whitespace-pre-wrap">${studentComment}</p>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t">
+              <button
+                id="save-student-comment"
+                class="flex items-center hover:bg-gray-700 bg-gray-600 text-white px-3 py-2 rounded"
+              >
+                <span class="mr-2">💾</span>
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold">Classes</h3>
+          </div>
+          <div class="px-4 pb-4">
+            ${renderStudentClasses()}
+          </div>
+        </div>
+      `;
+      
+      return content;
+    }
+    
+    // Render student classes
+    function renderStudentClasses() {
+      const student = state.database.students[state.ui.selectedStudent];
+      if (!student.classes || student.classes.length === 0) {
+        return `<div class="text-center py-8">
+          <p class="text-gray-500">This student is not enrolled in any classes.</p>
+        </div>`;
+      }
+      
+      return `
+        <div class="space-y-4">
+          ${student.classes.map(classId => {
+            const classInfo = state.database.classes[classId];
+            if (!classInfo) return '';
+            
+            return `
+              <div 
+                class="class-card p-4 bg-gray-50 rounded-lg flex justify-between items-center cursor-pointer"
+                data-id="${classId}"
+              >
+                <div class="flex-1">
+                  <h3 class="font-semibold text-lg mb-1">${classInfo.name}</h3>
+                  <div class="flex flex-wrap gap-x-6 text-sm text-gray-600">
+                    ${classInfo.level ? `<span>Level: ${classInfo.level}</span>` : ''}
+                    ${classInfo.teachers ? `<span>Teacher: ${classInfo.teachers}</span>` : ''}
+                    <span>${classInfo.students?.length || 0} students</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+    
+    // Toggle grade expansion
+    function toggleGradeExpansion(grade) {
+      state.ui.expandedGrades[grade] = !state.ui.expandedGrades[grade];
+      renderContent();
+    }
+    
+    // Select class for detailed view
+    function selectClass(classId) {
+      state.ui.selectedClass = classId;
+      state.ui.selectedStudent = null;
+      state.ui.activeTab = 'class-details';
+      renderContent();
+    }
+    
+    // Select student for detailed view
+    function selectStudent(studentId) {
+      state.ui.selectedStudent = studentId;
+      state.ui.selectedClass = null;
+      state.ui.activeTab = 'student-details';
+      renderContent();
+    }
+    
+    // Save comment
+    function saveComment(type, id, commentText) {
+      if (!commentText.trim()) return;
+      
+      // Determine if this is a new comment or appending to existing
+      const existingComment = type === 'class' 
+        ? state.database.comments.classes[id] || ''
+        : state.database.comments.students[id] || '';
+      
+      const newComment = existingComment 
+        ? `${existingComment}\n\n${new Date().toLocaleString()}: ${commentText}`
+        : `${new Date().toLocaleString()}: ${commentText}`;
+      
+      // Update the database
+      if (type === 'class') {
+        state.database.comments.classes[id] = newComment;
+      } else if (type === 'student') {
+        state.database.comments.students[id] = newComment;
+      }
+      
+      // Save to localStorage
+      saveToLocalStorage();
+      
+      // Re-render
+      renderContent();
+    }
+    
+    // Filter students based on search and class filter
+    function filterStudents() {
+      if (Object.keys(state.database.students).length === 0) {
+        state.ui.filteredStudents = [];
+        return;
+      }
+      
+      const searchTerm = state.ui.searchTerm.toLowerCase();
+      const classFilter = state.ui.classFilter;
+      
+      state.ui.filteredStudents = Object.values(state.database.students).filter(student => {
+        const nameMatch = 
+          (student.englishName && student.englishName.toLowerCase().includes(searchTerm)) ||
+          (student.koreanName && student.koreanName.toLowerCase().includes(searchTerm));
+          
+        const classMatch = 
+          classFilter === 'all' || 
+          (student.classes && student.classes.includes(classFilter));
+          
+        return nameMatch && classMatch;
+      });
+    }
+    
+    // Update class filter dropdown
+    function updateClassFilter() {
+      elements.classFilter.innerHTML = '<option value="all">All Classes</option>';
+      
+      if (Object.keys(state.database.classes).length > 0) {
+        Object.values(state.database.classes).forEach(classInfo => {
+          const option = document.createElement('option');
+          option.value = classInfo.id;
+          option.textContent = classInfo.name;
+          elements.classFilter.appendChild(option);
+        });
+      }
+    }
+    
+    // Process Excel file
+    function processExcelFile(arrayBuffer) {
+      try {
+        // Parse the Excel file
+        const workbook = XLSX.read(arrayBuffer, {
+          cellStyles: true,
+          cellFormulas: true,
+          cellDates: true,
+          cellNF: true,
+          sheetStubs: true
+        });
+        
+        const newDatabase = {
+          classes: {},
+          students: {},
+          comments: {
+            classes: {},
+            students: {}
+          }
+        };
+        
+        // Looking for important sheets
+        const dayScheduleSheets = workbook.SheetNames.filter(name => 
+          name.includes('MonFri') || 
+          name.includes('MonWed') || 
+          name.includes('TueThu') || 
+          name.includes('WedFri') || 
+          name === '2025 Kindy'
+        );
+        
+        // Grade-specific sheets (G1, G2, etc.)
+        const gradeSheets = workbook.SheetNames.filter(name => 
+          /^G\d+/.test(name) || name === 'G8 (중2)'
+        );
+        
+        // Process grade sheets
+        gradeSheets.forEach(sheetName => {
+          if (workbook.SheetNames.includes(sheetName)) {
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            
+            // Skip empty sheets
+            if (data.length < 2) return;
+            
+            // Grade number from sheet name
+            const gradeMatch = sheetName.match(/G(\d+)/);
+            const gradeNumber = gradeMatch ? gradeMatch[1] : sheetName.includes('Kindy') ? 'K' : '';
+            
+            // Process rows
+            for (let i = 0; i < data.length; i++) {
+              const row = data[i];
+              if (!row || row.length < 2) continue;
+              
+              // Check for header row
+              if (row[0] === 'Class/Level/Time' && row[1] === 'Name ') {
+                // Skip the header row
+                continue;
+              }
+              
+              // Process student row
+              const classInfo = row[0];
+              const studentName = row[1];
+              
+              if (!studentName || typeof studentName !== 'string' || studentName.trim() === '') continue;
+              
+              // Parse student name
+              const nameParts = studentName.split(' ');
+              let englishName = nameParts[0];
+              let koreanName = nameParts.slice(1).join(' ');
+              
+              // Handle special marks in the name
+              const hasF = studentName.includes(' F');
+              if (hasF) {
+                koreanName = koreanName.replace(' F', '');
+              }
+              
+              const studentId = `${englishName}-${koreanName}`;
+              
+              // Process class information
+              if (classInfo && typeof classInfo === 'string' && classInfo.match(/\d+[AEHRTP]/)) {
+                const parts = classInfo.split('\n');
+                if (parts.length < 1) continue;
+                
+                const levelMatch = parts[0].match(/(\d+)([AEHRTP])/);
+                if (!levelMatch) continue;
+                
+                const grade = levelMatch[1];
+                const levelCode = levelMatch[2];
+                const className = parts.length > 1 ? parts[1] : '';
+                
+                // Create class ID
+                const classId = `${grade}${levelCode} ${className}`;
+                
+                // If class doesn't exist yet, create it
+                if (!newDatabase.classes[classId] && className) {
+                  newDatabase.classes[classId] = {
+                    id: classId,
+                    name: className,
+                    grade: grade,
+                    levelCode: levelCode,
+                    level: `${grade}${levelCode}`,
+                    levelName: levelMapping[levelCode] || levelCode,
+                    fullLevelName: `Grade ${grade} ${levelMapping[levelCode] || levelCode}`,
+                    additionalInfo: parts.length > 2 ? parts[2] : '',
+                    schedule: parts.length > 3 ? parts[3] : '',
+                    teachers: parts.length > 4 ? parts[4] : '',
+                    students: []
+                  };
+                }
+                
+                // If this is a valid class, add student to it
+                if (className && newDatabase.classes[classId]) {
+                  // Add class to student
+                  if (!newDatabase.students[studentId]) {
+                    newDatabase.students[studentId] = {
+                      id: studentId,
+                      englishName,
+                      koreanName,
+                      grade: gradeNumber,
+                      classes: [classId],
+                      notes: hasF ? 'F' : ''
+                    };
+                  } else if (!newDatabase.students[studentId].classes.includes(classId)) {
+                    newDatabase.students[studentId].classes.push(classId);
+                  }
+                  
+                  // Add student to class
+                  if (!newDatabase.classes[classId].students.includes(studentId)) {
+                    newDatabase.classes[classId].students.push(studentId);
+                  }
+                }
+              }
+              
+              // Add/update student if they don't exist
+              if (!newDatabase.students[studentId]) {
+                newDatabase.students[studentId] = {
+                  id: studentId,
+                  englishName,
+                  koreanName,
+                  grade: gradeNumber,
+                  classes: [],
+                  notes: hasF ? 'F' : ''
+                };
+              }
+            }
+          }
+        });
+        
+        // Process Kindy sheet if it exists
+        if (workbook.SheetNames.includes('2025 Kindy')) {
+          const sheet = workbook.Sheets['2025 Kindy'];
+          const data = XLSX.utils.sheet_to_json(sheet, {header: 1});
+          
+          for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row.length < 2) continue;
+            
+            // Look for Class/Name headers
+            if (row[0] === 'Class' && row[1] === 'Name') {
+              // Process student rows
+              for (let j = i + 1; j < data.length; j++) {
+                const studentRow = data[j];
+                if (!studentRow || studentRow.length < 2) continue;
+                
+                const classInfo = studentRow[0];
+                const studentName = studentRow[1];
+                
+                if (!studentName || typeof studentName !== 'string' || studentName.trim() === '') continue;
+                
+                // Parse student name
+                const nameParts = studentName.split(' ');
+                let englishName = nameParts[0];
+                let koreanName = nameParts.slice(1).join(' ');
+                
+                const hasF = studentName.includes(' F');
+                if (hasF) {
+                  koreanName = koreanName.replace(' F', '');
+                }
+                
+                const studentId = `${englishName}-${koreanName}`;
+                
+                // Create a Kindy class ID
+                const classId = `Kindy ${classInfo}`;
+                
+                // If class doesn't exist yet, create it
+                if (!newDatabase.classes[classId] && classInfo) {
+                  newDatabase.classes[classId] = {
+                    id: classId,
+                    name: classInfo,
+                    grade: 'K',
+                    level: 'Kindy',
+                    levelName: 'Kindergarten',
+                    fullLevelName: 'Kindergarten',
+                    students: []
+                  };
+                }
+                
+                // Create student if not exists
+                if (!newDatabase.students[studentId]) {
+                  newDatabase.students[studentId] = {
+                    id: studentId,
+                    englishName,
+                    koreanName,
+                    grade: 'K',
+                    classes: [classId],
+                    notes: hasF ? 'F' : ''
+                  };
+                } else if (!newDatabase.students[studentId].classes.includes(classId)) {
+                  newDatabase.students[studentId].classes.push(classId);
+                }
+                
+                // Add student to class
+                if (newDatabase.classes[classId] && !newDatabase.classes[classId].students.includes(studentId)) {
+                  newDatabase.classes[classId].students.push(studentId);
+                }
+              }
+              
+              break; // Stop after processing the student rows
+            }
+          }
+        }
+        
+        // Process day schedule sheets
+        dayScheduleSheets.forEach(sheetName => {
+          if (workbook.SheetNames.includes(sheetName)) {
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            
+            // Find key rows
+            let classRowIndex = -1;
+            let timeRowIndex = -1;
+            let teacherRowIndex = -1;
+            
+            for (let i = 0; i < data.length; i++) {
+              const row = data[i];
+              if (!row) continue;
+              
+              if (row[0] === 'Class') classRowIndex = i;
+              if (row[0] === 'Time') timeRowIndex = i;
+              if (row[0] === 'Teacher') teacherRowIndex = i;
+            }
+            
+            if (classRowIndex === -1 || timeRowIndex === -1 || teacherRowIndex === -1) return;
+            
+            const classRow = data[classRowIndex];
+            const timeRow = data[timeRowIndex];
+            const teacherRow = data[teacherRowIndex];
+            
+            // Process each class column
+            for (let j = 1; j < classRow.length; j++) {
+              const classInfo = classRow[j];
+              if (!classInfo || typeof classInfo !== 'string') continue;
+              
+              // Parse class information
+              const parts = classInfo.split('\n');
+              if (parts.length < 1) continue;
+              
+              let gradeNumber = '';
+              let levelCode = '';
+              let className = '';
+              
+              // Handle Kindy classes differently
+              if (sheetName === '2025 Kindy') {
+                className = parts[0];
+                gradeNumber = 'K';
+                levelCode = 'K';
+              } else {
+                // Extract grade and level
+                const levelMatch = parts[0].match(/(\d+)([AEHRTP])/);
+                if (!levelMatch) continue;
+                
+                gradeNumber = levelMatch[1];
+                levelCode = levelMatch[2];
+                className = parts.length > 1 ? parts[1] : `Class ${j}`;
+              }
+              
+              const additionalInfo = parts.length > 2 ? parts[2] : '';
+              const schedule = timeRow[j] || '';
+              const teachers = teacherRow[j] || '';
+              
+              // Create class ID
+              const classId = gradeNumber === 'K' 
+                ? `Kindy ${className}`
+                : `${gradeNumber}${levelCode} ${className}`;
+              
+              // Add to database or update existing class
+              if (!newDatabase.classes[classId]) {
+                newDatabase.classes[classId] = {
+                  id: classId,
+                  name: className,
+                  grade: gradeNumber,
+                  levelCode: levelCode,
+                  level: gradeNumber === 'K' ? 'Kindy' : `${gradeNumber}${levelCode}`,
+                  levelName: gradeNumber === 'K' ? 'Kindergarten' : (levelMapping[levelCode] || levelCode),
+                  fullLevelName: gradeNumber === 'K' ? 'Kindergarten' : `Grade ${gradeNumber} ${levelMapping[levelCode] || levelCode}`,
+                  additionalInfo: additionalInfo,
+                  schedule: schedule,
+                  teachers: teachers,
+                  students: []
+                };
+              } else {
+                // Update existing class with any new information
+                const existingClass = newDatabase.classes[classId];
+                existingClass.schedule = existingClass.schedule || schedule;
+                existingClass.teachers = existingClass.teachers || teachers;
+                existingClass.additionalInfo = existingClass.additionalInfo || additionalInfo;
+              }
+              
+              // Check for students in this column
+              for (let i = teacherRowIndex + 1; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length <= j) continue;
+                
+                const studentName = row[j];
+                if (!studentName || typeof studentName !== 'string' || studentName.trim() === '') continue;
+                
+                // Parse student name
+                const nameParts = studentName.split(' ');
+                let englishName = nameParts[0];
+                let koreanName = nameParts.slice(1).join(' ');
+                
+                // Handle special marks in the name
+                const hasF = studentName.includes(' F');
+                if (hasF) {
+                  koreanName = koreanName.replace(' F', '');
+                }
+                
+                const studentId = `${englishName}-${koreanName}`;
+                
+                // Create student if not exists
+                if (!newDatabase.students[studentId]) {
+                  newDatabase.students[studentId] = {
+                    id: studentId,
+                    englishName,
+                    koreanName,
+                    grade: gradeNumber,
+                    classes: [classId],
+                    notes: hasF ? 'F' : ''
+                  };
+                } else if (!newDatabase.students[studentId].classes.includes(classId)) {
+                  newDatabase.students[studentId].classes.push(classId);
+                }
+                
+                // Add student to class
+                if (!newDatabase.classes[classId].students.includes(studentId)) {
+                  newDatabase.classes[classId].students.push(studentId);
+                }
+              }
+            }
+          }
+        });
+        
+        // Import comments if they exist
+        const existingComments = loadCommentsFromLocalStorage();
+        if (existingComments) {
+          newDatabase.comments = existingComments;
+        }
+        
+        return processDatabaseData(newDatabase);
+      } catch (err) {
+        console.error("Error processing Excel file:", err);
+        throw new Error(`Error processing file: ${err.message}`);
+      }
+    }
+    
+    // Calculate statistics and organize data
+    function processDatabaseData(database) {
+      // Calculate statistics
+      const totalStudents = Object.keys(database.students).length;
+      const totalClasses = Object.keys(database.classes).length;
+      
+      // Calculate students per grade
+      const studentsPerGrade = {};
+      
+      // Group classes by grade
+      const classesByGrade = {};
+      const grades = new Set();
+      
+      // Process classes
+      Object.values(database.classes).forEach(classInfo => {
+        if (classInfo.grade) {
+          const grade = classInfo.grade;
+          grades.add(grade);
+          
+          if (!classesByGrade[grade]) {
+            classesByGrade[grade] = {
+              classes: [],
+              students: []
+            };
+          }
+          
+          classesByGrade[grade].classes.push(classInfo);
+        }
+      });
+      
+      // Sort classes within each grade
+      Object.keys(classesByGrade).forEach(grade => {
+        classesByGrade[grade].classes.sort((a, b) => {
+          // First sort by level code
+          if (a.levelCode !== b.levelCode) {
+            // Custom sort order for level codes
+            const levelOrder = { 'R': 1, 'T': 2, 'H': 3, 'A': 4, 'E': 5 };
+            return (levelOrder[a.levelCode] || 99) - (levelOrder[b.levelCode] || 99);
+          }
+          // Then sort by name
+          return a.name.localeCompare(b.name);
+        });
+      });
+      
+      // Process students - assign them to grades
+      Object.values(database.students).forEach(student => {
+        // Count student in grade statistics
+        if (student.grade) {
+          const grade = student.grade;
+          if (!studentsPerGrade[grade]) {
+            studentsPerGrade[grade] = 0;
+          }
+          studentsPerGrade[grade]++;
+        }
+        
+        // Find all grades this student belongs to
+        const studentGrades = new Set();
+        
+        if (student.grade) {
+          studentGrades.add(student.grade);
+        }
+        
+        if (student.classes && student.classes.length > 0) {
+          student.classes.forEach(classId => {
+            const classInfo = database.classes[classId];
+            if (classInfo && classInfo.grade) {
+              studentGrades.add(classInfo.grade);
+            }
+          });
+        }
+        
+        // Add student to each grade they belong to
+        studentGrades.forEach(grade => {
+          if (classesByGrade[grade]) {
+            classesByGrade[grade].students.push(student);
+          }
+        });
+        
+        // If student doesn't belong to any grade, add to "Unassigned"
+        if (studentGrades.size === 0) {
+          if (!classesByGrade['Unassigned']) {
+            classesByGrade['Unassigned'] = {
+              classes: [],
+              students: []
+            };
+            grades.add('Unassigned');
+          }
+          
+          classesByGrade['Unassigned'].students.push(student);
+        }
+      });
+      
+      // Sort students within each grade
+      Object.keys(classesByGrade).forEach(grade => {
+        classesByGrade[grade].students.sort((a, b) => {
+          return a.englishName.localeCompare(b.englishName);
+        });
+      });
+      
+      // Sort grades
+      const sortedGrades = Array.from(grades).sort((a, b) => {
+        if (a === 'K') return -1;
+        if (b === 'K') return 1;
+        if (a === 'Unassigned') return 1;
+        if (b === 'Unassigned') return -1;
+        return parseInt(a) - parseInt(b);
+      });
+      
+      // Initialize expanded state for each grade
+      const expandedGrades = {};
+      sortedGrades.forEach(grade => {
+        expandedGrades[grade] = true; // Start with all expanded
+      });
+      
+      // Update state
+      state.database = database;
+      state.ui.classesByGrade = classesByGrade;
+      state.ui.studentsByGrade = classesByGrade;
+      state.ui.gradesList = sortedGrades;
+      state.ui.expandedGrades = expandedGrades;
+      state.stats = {
+        totalStudents,
+        totalClasses,
+        studentsPerGrade
+      };
+      
+      // Filter students
+      filterStudents();
+      
+      // Update class filter dropdown
+      updateClassFilter();
+      
+      return state;
+    }
+    
+    // File upload handler
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        // Show loading
+        showError(null);
+        showStatus(false);
+        elements.mainContent.innerHTML = `
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p class="text-gray-600">Loading data from Excel file...</p>
+            </div>
+          </div>
+        `;
+        
+        // Only process Excel files
+        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+          // Read the file
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const arrayBuffer = e.target.result;
+              processExcelFile(arrayBuffer);
+              
+              // Save to localStorage
+              saveToLocalStorage();
+              
+              // Show success
+              showStatus(true);
+              
+              // Update navigation
+              navigateTo('dashboard');
+            } catch (err) {
+              console.error("Error processing file:", err);
+              showError(`Error processing file: ${err.message}`);
+              
+              // Load sample data as fallback
+              loadSampleData();
+            }
+          };
+          
+          reader.onerror = () => {
+            showError("Error reading file");
+            loadSampleData();
+          };
+          
+          reader.readAsArrayBuffer(file);
+        } else {
+          showError("Please upload an Excel file (.xlsx or .xls)");
+          loadSampleData();
+        }
+      } catch (err) {
+        showError(`Error uploading file: ${err.message}`);
+        loadSampleData();
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      if (message) {
+        elements.errorMessage.textContent = `Note: ${message}`;
+        elements.errorMessage.classList.remove('hidden');
+      } else {
+        elements.errorMessage.classList.add('hidden');
+      }
+    }
+    
+    // Show status message
+    function showStatus(show) {
+      if (show) {
+        elements.dataStatus.classList.remove('hidden');
+      } else {
+        elements.dataStatus.classList.add('hidden');
+      }
+    }
+    
+    // Save to localStorage
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('studentManagementData', JSON.stringify(state.database));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+        // Fallback for large data: just save comments
+        try {
+          localStorage.setItem('studentManagementComments', JSON.stringify(state.database.comments));
+        } catch (error) {
+          console.error('Error saving comments to localStorage:', error);
+        }
+      }
+    }
+    
+    // Load from localStorage
+    function loadFromLocalStorage() {
+      try {
+        const savedData = localStorage.getItem('studentManagementData');
+        if (savedData) {
+          return JSON.parse(savedData);
+        }
+        return null;
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        return null;
+      }
+    }
+    
+    // Load comments from localStorage
+    function loadCommentsFromLocalStorage() {
+      try {
+        const savedComments = localStorage.getItem('studentManagementComments');
+        if (savedComments) {
+          return JSON.parse(savedComments);
+        }
+        return null;
+      } catch (error) {
+        console.error('Error loading comments from localStorage:', error);
+        return null;
+      }
+    }
+    
+    // Export data
+    function exportData() {
+      try {
+        // Create a blob with the JSON data
+        const dataStr = JSON.stringify(state.database);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        
+        // Create a download link
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'student-management-data.json';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error exporting data:', error);
+        showError('Failed to export data: ' + error.message);
+      }
+    }
+    
+    // Import data
+    async function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        // Show loading
+        showError(null);
+        showStatus(false);
+        elements.mainContent.innerHTML = `
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p class="text-gray-600">Importing data...</p>
+            </div>
+          </div>
+        `;
+        
+        // Read the file
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const text = e.target.result;
+            const importedData = JSON.parse(text);
+            
+            if (importedData && importedData.classes && importedData.students) {
+              // Process the imported data
+              processDatabaseData(importedData);
+              
+              // Save to localStorage
+              saveToLocalStorage();
+              
+              // Show success
+              showStatus(true);
+              
+              // Update navigation
+              navigateTo('dashboard');
+            } else {
+              showError('Invalid import file format');
+              loadSampleData();
+            }
+          } catch (err) {
+            console.error("Error importing data:", err);
+            showError(`Error importing data: ${err.message}`);
+            loadSampleData();
+          }
+        };
+        
+        reader.onerror = () => {
+          showError("Error reading file");
+          loadSampleData();
+        };
+        
+        reader.readAsText(file);
+      } catch (err) {
+        showError(`Error importing data: ${err.message}`);
+        loadSampleData();
+      }
+    }
+    
+    // Load sample data
+    function loadSampleData() {
+      try {
+        // Show loading
+        showError(null);
+        showStatus(false);
+        elements.mainContent.innerHTML = `
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p class="text-gray-600">Loading sample data...</p>
+            </div>
+          </div>
+        `;
+        
+        // Create mock data
+        const mockGrades = ['K', '1', '2', '3', '4', '5', '6', 'Unassigned'];
+        const mockLevels = ['R', 'T', 'H', 'A', 'E'];
+        const mockClasses = {};
+        const mockStudents = {};
+        const mockComments = { classes: {}, students: {} };
+        
+        // Create classes
+        mockGrades.forEach(grade => {
+          if (grade === 'Unassigned') return;
+          
+          // Special case for Kindy
+          if (grade === 'K') {
+            ['Yellow', 'Blue', 'Red', 'Green'].forEach((className, idx) => {
+              const classId = `Kindy ${className}`;
+              mockClasses[classId] = {
+                id: classId,
+                name: className,
+                grade: 'K',
+                level: 'Kindy',
+                levelName: 'Kindergarten',
+                fullLevelName: 'Kindergarten',
+                teachers: `Teacher ${idx + 1}`,
+                schedule: `M-F ${9 + idx}:00-${10 + idx}:00`,
+                students: []
+              };
+            });
+          } else {
+            // Regular grades
+            mockLevels.forEach((level, idx) => {
+              const className = ['Stars', 'Galaxy', 'Moon', 'Planets', 'Rainbow'][idx % 5];
+              const classId = `${grade}${level} ${className}`;
+              mockClasses[classId] = {
+                id: classId,
+                name: className,
+                grade: grade,
+                levelCode: level,
+                level: `${grade}${level}`,
+                levelName: levelMapping[level],
+                fullLevelName: `Grade ${grade} ${levelMapping[level]}`,
+                teachers: `Teacher ${idx + 1}`,
+                schedule: `M-F ${9 + idx}:00-${10 + idx}:00`,
+                students: []
+              };
+            });
+          }
+        });
+        
+        // Create students
+        const firstNames = ['Emma', 'Noah', 'Olivia', 'Liam', 'Sophia', 'Jackson', 'Ava', 'Aiden', 'Isabella', 'Lucas'];
+        const lastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임'];
+        let studentCounter = 0;
+        
+        mockGrades.forEach(grade => {
+          if (grade === 'Unassigned') return;
+          
+          // Number of students per grade
+          const studentCount = grade === 'K' ? 40 : 30;
+          
+          for (let i = 0; i < studentCount; i++) {
+            const firstName = firstNames[studentCounter % firstNames.length];
+            const lastName = lastNames[studentCounter % lastNames.length];
+            const koreanName = `${lastName}${studentCounter % 100}`;
+            const studentId = `${firstName}-${koreanName}`;
+            
+            // Assign to a class
+            let classId;
+            const gradeClasses = Object.values(mockClasses).filter(c => c.grade === grade);
+            const randomClass = gradeClasses[i % gradeClasses.length];
+            classId = randomClass.id;
+            
+            mockStudents[studentId] = {
+              id: studentId,
+              englishName: firstName,
+              koreanName: koreanName,
+              grade: grade,
+              classes: [classId],
+              notes: i % 10 === 0 ? 'F' : '',
+              phoneNumber: i % 5 === 0 ? `010-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}` : '',
+              email: i % 7 === 0 ? `${firstName.toLowerCase()}${studentCounter}@example.com` : '',
+              startDate: `${Math.floor(1 + Math.random() * 12)}/${Math.floor(1 + Math.random() * 28)}`
+            };
+            
+            // Add student to class
+            mockClasses[classId].students.push(studentId);
+            
+            studentCounter++;
+          }
+        });
+        
+        // Add some comments
+        for (let i = 0; i < 10; i++) {
+          const randomClassId = Object.keys(mockClasses)[Math.floor(Math.random() * Object.keys(mockClasses).length)];
+          mockComments.classes[randomClassId] = `${new Date().toLocaleString()}: Sample class comment ${i + 1}`;
+          
+          const randomStudentId = Object.keys(mockStudents)[Math.floor(Math.random() * Object.keys(mockStudents).length)];
+          mockComments.students[randomStudentId] = `${new Date().toLocaleString()}: Sample student comment ${i + 1}`;
+        }
+        
+        // Import existing comments if available
+        const existingComments = loadCommentsFromLocalStorage();
+        if (existingComments) {
+          Object.assign(mockComments.classes, existingComments.classes || {});
+          Object.assign(mockComments.students, existingComments.students || {});
+        }
+        
+        // Create the mock database
+        const mockDatabase = {
+          classes: mockClasses,
+          students: mockStudents,
+          comments: mockComments
+        };
+        
+        // Process the data
+        processDatabaseData(mockDatabase);
+        
+        // Save to localStorage
+        saveToLocalStorage();
+        
+        // Show success with warning about sample data
+        showError('Using sample data (demo mode)');
+        showStatus(true);
+        
+        // Navigate to dashboard
+        navigateTo('dashboard');
+      } catch (err) {
+        console.error("Error loading sample data:", err);
+        showError(`Error loading sample data: ${err.message}`);
+      }
+    }
+    
+    // Initialize the application
+    function init() {
+      // Set up event listeners
+      initNavigation();
+      
+      // Try to load from localStorage first
+      const savedData = loadFromLocalStorage();
+      if (savedData && Object.keys(savedData).length > 0) {
+        try {
+          // Process the saved data
+          processDatabaseData(savedData);
+          
+          // Show success
+          showStatus(true);
+          
+          // Navigate to dashboard
+          navigateTo('dashboard');
+        } catch (error) {
+          console.error("Error processing saved data:", error);
+          showError("Error loading saved data");
+        }
+      }
+    }
+    
+    // Start the application
+    init();
+  </script>
+</body>
+</html>
