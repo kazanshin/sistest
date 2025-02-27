@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twin.kle Student Management System</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Additional custom styles */
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <!-- Pre-rendered content to ensure something displays -->
+    <div class="flex flex-col h-screen bg-gray-50">
+      <header class="p-4 flex items-center justify-between bg-white border-b shadow-sm">
+        <div class="flex items-center">
+          <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+            <span class="text-gray-600 font-bold text-lg">t.</span>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+            Student Management System
+          </h1>
+        </div>
+        <div class="text-xl font-semibold">
+          <span class="text-gray-600">twin</span>
+          <span class="text-gray-700">.kle</span>
+        </div>
+      </header>
+
+      <main class="flex-1 p-6 flex flex-col items-center justify-center">
+        <div class="text-center max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-4">Loading Application...</h2>
+          <div id="status-message" class="text-gray-600 mb-4">
+            Please wait while the application initializes.
+          </div>
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+        </div>
+      </main>
+
+      <footer class="border-t p-4 text-center text-gray-700 text-sm flex items-center justify-center bg-gray-100">
+        <div class="text-lg font-semibold">
+          <span class="text-gray-600">twin</span>
+          <span class="text-gray-700">.kle</span>
+        </div>
+        <span class="mx-2">•</span>
+        <span>Student Management System • 2025</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Vanilla JavaScript - No Babel needed -->
+  <script>
+    // Wait for the page to fully load
+    window.addEventListener('DOMContentLoaded', function() {
+      const statusMessage = document.getElementById('status-message');
+      
+      // Update status to show progress
+      function updateStatus(message) {
+        if (statusMessage) {
+          statusMessage.textContent = message;
+        }
+        console.log(message);
+      }
+      
+      // Initialize application with minimal functionality
+      function initApp() {
+        try {
+          updateStatus("Application initialized successfully!");
+          
+          // Replace loading spinner with success message
+          const mainContent = document.querySelector('main');
+          if (mainContent) {
+            mainContent.innerHTML = `
+              <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+                <div class="flex items-center justify-center mb-4 text-green-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 class="text-xl font-semibold mb-4 text-center">Application Loaded Successfully</h2>
+                <p class="text-gray-600 mb-6 text-center">
+                  The basic application is now working. For the full functionality, please download and run the application locally.
+                </p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <p class="text-sm text-yellow-700">
+                    <strong>Note:</strong> GitHub Pages has limitations that prevent the full application from running properly.
+                    The complete version works best when run from your local machine or a dedicated web server.
+                  </p>
+                </div>
+                
+                <div class="mt-6">
+                  <button id="loadMockData" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    Try Demo Mode
+                  </button>
+                </div>
+              </div>
+            `;
+            
+            // Add event listener for the demo button
+            const demoButton = document.getElementById('loadMockData');
+            if (demoButton) {
+              demoButton.addEventListener('click', function() {
+                showDemoInterface();
+              });
+            }
+          }
+        } catch (error) {
+          updateStatus("Error initializing app: " + error.message);
+          console.error("App initialization error:", error);
+        }
+      }
+      
+      // Show a simplified demo interface
+      function showDemoInterface() {
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+          mainContent.innerHTML = `
+            <div class="w-full max-w-4xl mx-auto">
+              <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold">Dashboard</h1>
+                <div class="text-sm text-gray-500">Demo Mode</div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                  <div class="p-4 bg-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                      <span class="mr-2">👤</span>
+                      Total Students
+                    </h3>
+                  </div>
+                  <div class="px-4 pb-4 pt-6">
+                    <p class="text-3xl font-bold">247</p>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                  <div class="p-4 bg-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                      <span class="mr-2">👥</span>
+                      Total Classes
+                    </h3>
+                  </div>
+                  <div class="px-4 pb-4 pt-6">
+                    <p class="text-3xl font-bold">32</p>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                  <div class="p-4 bg-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                      <span class="mr-2">📊</span>
+                      Grade with Most Students
+                    </h3>
+                  </div>
+                  <div class="px-4 pb-4 pt-6">
+                    <p class="text-3xl font-bold">Grade 3</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-4">
+                  <h3 class="text-lg font-semibold">Students by Grade Level</h3>
+                  <p class="text-sm text-gray-500">Distribution of students across different grade levels</p>
+                </div>
+                <div class="px-4 pb-4">
+                  <div class="space-y-4">
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Kindergarten</span>
+                        <span class="text-sm font-medium">40 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 16%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 1</span>
+                        <span class="text-sm font-medium">35 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 14%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 2</span>
+                        <span class="text-sm font-medium">38 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 15%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 3</span>
+                        <span class="text-sm font-medium">45 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 18%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 4</span>
+                        <span class="text-sm font-medium">32 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 13%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 5</span>
+                        <span class="text-sm font-medium">30 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 12%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Grade 6</span>
+                        <span class="text-sm font-medium">27 students</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full bg-gray-500" style="width: 11%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="mt-6 text-center">
+                <p class="text-gray-500 text-sm">This is a limited demo version. The full application includes:</p>
+                <ul class="mt-2 space-y-1 text-sm text-gray-600">
+                  <li>• Excel file import/export</li>
+                  <li>• Complete student management</li>
+                  <li>• Class scheduling and organization</li>
+                  <li>• Comments and notes functionality</li>
+                </ul>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Start initialization after a short delay
+      setTimeout(function() {
+        updateStatus("Initializing application...");
+        setTimeout(initApp, 500);
+      }, 500);
+    });
+  </script>
+</body>
+</html>
